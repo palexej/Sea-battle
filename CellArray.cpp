@@ -5,15 +5,23 @@
 #include  <locale.h>
 CellArray::CellArray()
 {
+	
 	for (int i = 0; i < CELL_COUNT; ++i)
 	{
 		for (int j = 0; j < CELL_COUNT; ++j)
 		{
-			Cell* cell = new Cell(i, j,EMPTY);
-			cellMatrix[i][j] = new Cell(*cell);
+			cellMatrix[i][j] = new Cell(i, j, EMPTY);
 		}
 	}
 	CreateBattleField();
+}
+Cell CellArray::GetCellByIndex(int x, int y)
+{
+	return  cellMatrix[x][y];
+}
+void CellArray::SetCellByIndex(int x, int y,string value)
+{
+	cellMatrix[x][y].setCellType(value);
 }
 
 void CellArray::ShowBattleField()
@@ -22,7 +30,7 @@ void CellArray::ShowBattleField()
 	{
 		for (int j = 0; j < CELL_COUNT; ++j)
 		{
-			cout << cellMatrix[i][j].getCellType();
+			cout << GetCellByIndex(i,j).getCellType();
 		}
 		cout << "\n";
 	}

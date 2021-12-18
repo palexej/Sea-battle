@@ -2,6 +2,14 @@
 #include "Cell.h"
 
 
+bool Cell::operator==(string str) const
+{
+	if (this->cell_type_==str)
+	{
+		return true;
+	}
+	return false;
+}
 
 Cell::Cell(int xCoord=0,int yCoord=0,string str="?")
 {

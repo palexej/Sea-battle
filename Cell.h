@@ -8,7 +8,7 @@ class Cell
 {
 
 	//одна €чейка
-private:
+protected:
 	int x_coord_;
 	int y_coord_;
 	string cell_type_;
@@ -24,10 +24,11 @@ public:
 	const string BORDERS = "@";
 		
 	 const string EMPTY = "?";
+	 const string MISS= "$";
 	
 	static const int CELL_COUNT = 12;
-	Cell(int xCoord, int yCoord, char symbol);
 	char ShowCell();
+	bool operator==(string str) const;
 	Cell(int xCoord, int yCoord, string str);
 	::Cell& operator=(Cell* cell);
 	Cell();
