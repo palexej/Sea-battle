@@ -10,6 +10,7 @@
 #include "CellArray.h"
 #include  "Ship.h"
 #include <string.h>
+#include <algorithm> 
 using namespace std;
 vector<Ship> player_vector;
 map<int, int> shipDictionary={
@@ -41,15 +42,15 @@ void RandomShipPositions(map<int, int> &shipDictionary, CellArray& cellsArray,ve
 	mt19937 mersenne(rd()); // инициализируем Вихрь Мерсенна случайным стартовым числом
 	
 
-	int startShipLenght = 1;
+	int startShipLenght = 2;
 
  	while( shipDictionary[4]<1)//пока не добавлен корабль длины 4
 	{
-		if (shipDictionary[1] == 4)
+		/*if (shipDictionary[1] == 4)
 		{
 			startShipLenght = 2;
-		}
-		if (shipDictionary[2] == 3)
+		}*/
+		if (shipDictionary[2] == 4)
 		{
 			startShipLenght = 3;
 		}
@@ -80,7 +81,7 @@ void RandomShipPositions(map<int, int> &shipDictionary, CellArray& cellsArray,ve
 		
 
 		Ship ship(randomX, randomY, randomVertical, randomLenght,1);
-		if (cellsArray.GetCellByIndex(randomX, randomY).getCellType()!="#")
+		//if (cellsArray.GetCellByIndex(randomX, randomY).getCellType()!="#")
 		{
 			if (CheckShipCount(shipDictionary))
 			{
@@ -89,37 +90,62 @@ void RandomShipPositions(map<int, int> &shipDictionary, CellArray& cellsArray,ve
 					ships.push_back(ship);
 
 					shipDictionary[randomLenght] += 1;
-					cout << shipDictionary[randomLenght] << endl;
+					//cout << shipDictionary[randomLenght] << endl;
 				}
 			}
 		}
 	}
 }
- /*void CheckShipShooting(Cell selectedCell, CellArray cellsArray,
-	vector<Ship> ships)
+
+ void CheckShipShooting(Cell &selectedCell, CellArray &cellsArray,
+	vector<Ship> &ships)
 {
-	if (selectedCell.IsShip && selectedCell.Enabled) //проверка на то, чтобы не считать лишние клики
-	{
-		Ship foundedShip =
-			ships.FirstOrDefault(ship1 = > ship1.ShipId.Equals(selectedCell.ShipId));
-		if (foundedShip != null)
+	 string isShip = "#";
+	 string isMiss = "$";
+	 vector<Ship>::iterator it;
+	
+	 bool isFound = false;
+		for (it = ships.begin(); it != ships.end(); ++it)
 		{
-			selectedCell.Enabled = false;
-			selectedCell.IsShot = true;
-			if (foundedShip.CheckLostShip(cellsArray))
+			if (it->getID()==selectedCell.getCellID())
 			{
-				cellsArray.FixingBordersColor();
-				ships.Remove(foundedShip); //удаляем корабль из списка
+				isFound = true;
+				cout << "Попадание" << endl;
+				cellsArray.SetCellByIndex(selectedCell.getXcoord(), selectedCell.getYcoord(), "*");
+				if(it->CheckLostShip(cellsArray))//если корабль убит
+				{
+					cout << "Корабль уничтожен" << endl;
+				}
+			
+				//deadShip.CheckLostShip(cellsArray);
+				
 			}
 		}
-	}
+	 if (!isFound)
+	 {
+		 cout << "Промах" << endl;
+		 cellsArray.SetCellByIndex(selectedCell.getXcoord(), selectedCell.getYcoord(), "$");
+	 } 
+		/*vector<Ship>::iterator it;
+		for ( it= ships.begin(); it < ships.end(); ++it)
+		{
+			cout << it->getID() << endl;
+		}*/
+		//auto findShip=find(ships.begin(), ships.end(), 1);
 
-	else if (selectedCell.Enabled)
-	{
-		selectedCell.IsShot = false;
-		selectedCell.Enabled = false;
-	}
-}*/
+	//	cout << findShip << endl;
+		/*if (foundedShip != null)
+		{
+			
+			if (foundedShip.CheckLostShip(cellsArray))
+			{
+				//cellsArray.FixingBordersColor();
+				ships.Remove(foundedShip); //удаляем корабль из списка
+			}
+		}*/
+	
+
+}
 int main()
 {
 	CellArray playerField, newField;
@@ -129,7 +155,7 @@ int main()
 	int x = 0,  y = 0, verticalNumber,lenghtValue;
 	bool verticalValue;
 	int shipCount=0;
-	playerField.ShowBattleField();
+	
 	RandomShipPositions(shipDictionary, playerField, player_vector);
 	/*while (shipCount < 1)
 	{
@@ -173,9 +199,38 @@ int main()
 		//ship.DeleteShip(playerField);
 
 	}*/
-	playerField.ShowBattleField();
+	
+	while (player_vector.size() > 0)
+	{
+		cout << "Размер вектора " << player_vector.size() <<endl;
+		playerField.ShowBattleField();
+		cout << "х и у для выстрела:" << endl;
+		int shotX, shotY;
+		cin >> shotX >> shotY;
+		//string myType=
+		Cell shotCell(shotX, shotY,"",-1);
+		string checkThisId = playerField.GetCellByIndex(shotX, shotY).getCellType();
+		if (checkThisId!="?")
+		{
+			shotCell.setCellID(stoi(checkThisId));
+		}
+	
+		/*cout << "\nМассив:" << endl;
+		for (int i = 0; i < 10; ++i)
+		{
+			for (int j = 0; j < 10; ++j)
+			{
+				cout << playerField.GetCellByIndex(i, j).getCellType() << " ";
+			}
+			cout << "\n";
+		}*/
+		/*int cell_id = playerField.GetCellByIndex(shotX,shotY).getCellID();
+		shotCell.setCellID(cell_id);*/
+		CheckShipShooting(shotCell, playerField, player_vector); 
 
-
+		
+	}
+	
 	system("pause");
 	return 0;
 

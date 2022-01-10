@@ -11,11 +11,22 @@ bool Cell::operator==(string str) const
 	return false;
 }
 
-Cell::Cell(int xCoord=0,int yCoord=0,string str="?")
+int Cell::getCellID()
+{
+	return cellID;
+}
+
+void Cell::setCellID(int yourId)
+{
+	cellID = yourId;
+}
+
+Cell::Cell(int xCoord=0,int yCoord=0,string str="?",int id=-1)
 {
 	x_coord_ = xCoord;
 	y_coord_ = yCoord;
 	cell_type_ = str;
+	cellID = id;
 }
 
 
@@ -26,6 +37,7 @@ Cell& Cell::operator=(Cell* cell)
 	x_coord_ = cell->x_coord_;
 	y_coord_ = cell->y_coord_;
 	cell_type_ = cell->cell_type_;
+	cellID = cell->cellID;
 	return *this;
 }
 
@@ -35,6 +47,7 @@ Cell::Cell()
 	x_coord_ = 0;
 	y_coord_ = 0;
 	cell_type_ = BORDERS;
+	cellID = -1;
 }
 
 int Cell::getXcoord()

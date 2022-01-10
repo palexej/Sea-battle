@@ -10,7 +10,7 @@ CellArray::CellArray()
 	{
 		for (int j = 0; j < CELL_COUNT; ++j)
 		{
-			cellMatrix[i][j] = new Cell(i, j, EMPTY);
+			cellMatrix[i][j] = new Cell(i, j, EMPTY,-1);
 		}
 	}
 	CreateBattleField();

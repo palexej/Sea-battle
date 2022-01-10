@@ -20,6 +20,7 @@ public:
 	void setYcoord(int y);
 	bool CheckShipID(Cell& cell);
 	bool AddShip(CellArray& cellsArray);
+	bool CheckLostShip(CellArray& cellsArray);
 	void DeleteShip(CellArray& myArray);
 	bool getVertical();
 	int getLenght();
