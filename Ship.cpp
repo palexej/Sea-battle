@@ -69,6 +69,9 @@ void Ship::setYcoord(int y)
 		y_ = 0;
 	}
 }
+bool  Ship::operator==(const Ship& r) {
+	return id_ == r.id_		;
+}
 
 bool Ship::CheckShipID(Cell& cell) //проверяем, чтобы корабли лежали от 1 до 9
 {

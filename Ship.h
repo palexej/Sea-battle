@@ -18,6 +18,7 @@ public:
 	void setXcoord(int x);
 	int getYcoord();
 	void setYcoord(int y);
+	bool operator==(const Ship& r);
 	bool CheckShipID(Cell& cell);
 	bool AddShip(CellArray& cellsArray);
 	bool CheckLostShip(CellArray& cellsArray);
