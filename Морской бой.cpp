@@ -1,19 +1,20 @@
 ﻿// Морской бой.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
 //
 
-#include "pch.h"
 #include <iostream>
 #include <map>
 #include <random>
-
+#include "Ship.h"
 #include "Cell.h"
-#include "CellArray.h"
-#include  "Ship.h"
 #include <string.h>
-#include <algorithm> 
+#include <algorithm>
+#include <mutex>
+#include <thread>
+
+#include "MyGraphic.h"
 using namespace std;
 vector<Ship> player_vector;
-map<int, int> shipDictionary={
+map<int, int> playerDictionary={
 	{
 		1,0
 	},
@@ -36,6 +37,16 @@ map<int, int> shipDictionary={
 
 	return true;
 }
+ struct PCout
+ {
+	 static std::mutex& Mutex()
+	 {
+		 static std::mutex mut;
+		 return mut;
+	 }
+ };
+#define thread_cout(msg)\
+    PCout::Mutex().lock(), msg, PCout::Mutex().unlock()
 void RandomShipPositions(map<int, int> &shipDictionary, CellArray& cellsArray,vector<Ship> &ships)
 {
 	random_device rd;
@@ -46,7 +57,7 @@ void RandomShipPositions(map<int, int> &shipDictionary, CellArray& cellsArray,ve
 
  	while( shipDictionary[4]<1)//пока не добавлен корабль длины 4
 	{
-		/*if (shipDictionary[1] == 4)
+		/*if (playerDictionary[1] == 4)
 		{
 			startShipLenght = 2;
 		}*/
@@ -90,7 +101,7 @@ void RandomShipPositions(map<int, int> &shipDictionary, CellArray& cellsArray,ve
 					ships.push_back(ship);
 
 					shipDictionary[randomLenght] += 1;
-					//cout << shipDictionary[randomLenght] << endl;
+					//cout << playerDictionary[randomLenght] << endl;
 				}
 			}
 		}
@@ -189,7 +200,7 @@ void RandomShipPositions(map<int, int> &shipDictionary, CellArray& cellsArray,ve
 		 while (rightGenerationFlag)
 		 {
 			 if ( cellsArray.GetCellByIndex(randomX, randomY).getCellType() == "*"|| cellsArray.GetCellByIndex(randomX, randomY).getCellType()=="@"
-				 || cellsArray.GetCellByIndex(randomX, randomY).getCellType() == "$")
+				 || cellsArray.GetCellByIndex(randomX, randomY).getCellType() == "$" || cellsArray.GetCellByIndex(randomX, randomY).getCellType() == "#")
 			 {
 				 randomX = randomShipPosition(rd);
 				 randomY = randomShipPosition(rd);
@@ -226,9 +237,31 @@ void RandomShipPositions(map<int, int> &shipDictionary, CellArray& cellsArray,ve
 		 }
 	 }*/
  }
+
+ void MakePlayerShot(CellArray& cellsArray, vector<Ship> ships)
+{
+	 //cout << "Размер вектора " << player_vector.size() << endl;
+	 cellsArray.ShowBattleField();
+	 cout << "х и у для выстрела:" << endl;
+	 int shotX, shotY;
+	 cin >> shotX >> shotY;
+	 //string myType=
+	 Cell shotCell(shotX, shotY, "", -1);
+	 string checkThisId = cellsArray.GetCellByIndex(shotX, shotY).getCellType();
+	 if (checkThisId != "?")
+	 {
+		 shotCell.setCellID(stoi(checkThisId));
+	 }
+
+
+	 CheckShipShooting(shotCell, cellsArray, ships);
+
+}
+
+
 int main()
 {
-	CellArray playerField, newField;
+	CellArray playerField, botField;
 
 	Cell cell;
 
@@ -236,7 +269,14 @@ int main()
 	bool verticalValue;
 	int shipCount=0;
 	
-	RandomShipPositions(shipDictionary, playerField, player_vector);
+	RandomShipPositions(playerDictionary, playerField, player_vector);
+
+	map<int, int> botDictionary = playerDictionary;
+	vector<Ship> bot_vector;
+
+	RandomShipPositions(botDictionary, botField, bot_vector);
+	int playerOffset = 0;
+	int botOffset = 750;
 	/*while (shipCount < 1)
 	{
 
@@ -263,15 +303,15 @@ int main()
 		if (ship.AddShip(playerField))
 		{
 			cout << "Корабль размещен" << endl;
-			shipDictionary[lenghtValue - 1] += 1;
+			playerDictionary[lenghtValue - 1] += 1;
 			shipCount++;
 		}
 		else
 		{
 			cout << "Невозможно размещение в этой позиции" << endl;
 		}
-		for (int i = 0; i< shipDictionary.size();  i++) {  // выводим их
-			cout << shipDictionary[i] << endl;
+		for (int i = 0; i< playerDictionary.size();  i++) {  // выводим их
+			cout << playerDictionary[i] << endl;
 		}
 
 		system("pause");
@@ -282,33 +322,37 @@ int main()
 	//ручные выстрелы
 	/*while (player_vector.size() > 0)
 	{
-		cout << "Размер вектора " << player_vector.size() <<endl;
-		playerField.ShowBattleField();
-		cout << "х и у для выстрела:" << endl;
-		int shotX, shotY;
-		cin >> shotX >> shotY;
-		//string myType=
-		Cell shotCell(shotX, shotY,"",-1);
-		string checkThisId = playerField.GetCellByIndex(shotX, shotY).getCellType();
-		if (checkThisId!="?")
-		{
-			shotCell.setCellID(stoi(checkThisId));
-		}
-	
 		
-		CheckShipShooting(shotCell, playerField, player_vector); 
-
 		
 	}*/
-	
-	//выстрелы компа
-	while (player_vector.size() > 0)
-	{
-		
-		playerField.ShowBattleField();
-		MakeRandomAIShot(playerField, player_vector);
-		system("pause");
 
+	//выстрелы компа
+	while (player_vector.size() > 0||bot_vector.size()>0)
+	{
+		//system("pause");
+		
+		MyGraphic my_graphic;
+
+	
+		//playerField.ShowBattleField();
+		MakeRandomAIShot(playerField, player_vector);
+
+		
+		MakePlayerShot(botField, bot_vector);
+		//my_graphic.ShowFieldWindow(true, playerField);
+	
+		my_graphic.ShowFieldWindow(true,playerOffset,botOffset,playerField,botField);
+
+	
+		//thread t1(&MyGraphic::ShowFieldWindow,my_graphic,true, playerOffset,playerField);
+		//thread t2(&CellArray::ShowBattleField,playerField);
+		//thread t3(&MakeRandomAIShot, playerField, player_vector);
+		//t1.join();
+		//t2.join();
+		//t3.join();
+
+		
+		
 
 	}
 	
