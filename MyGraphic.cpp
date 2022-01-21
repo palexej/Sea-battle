@@ -11,7 +11,7 @@ MyGraphic::~MyGraphic()
 }
 
 
-void MyGraphic::DrawEmptyField(RenderWindow& window,int offsetX)
+void MyGraphic::DrawEmptyField(RenderWindow& window, int offsetX)
 {
 	int xPos = 0, yPos = 0;;
 
@@ -38,14 +38,14 @@ void MyGraphic::DrawEmptyField(RenderWindow& window,int offsetX)
 				string letterArray = " АБВГДЕЖЗИК";
 
 				text.setString(letterArray[j]);
-				text.setPosition(i * rectSize+ offsetX, j * rectSize);
+				text.setPosition(i * rectSize + offsetX, j * rectSize);
 				window.draw(text);
 				continue;
 			}
 			if (j == 0 && i < maxFieldLenght)
 			{
 				text.setString(to_string(i));
-				text.setPosition(i * rectSize+ offsetX, j * rectSize);
+				text.setPosition(i * rectSize + offsetX, j * rectSize);
 				window.draw(text);
 				continue;
 			}
@@ -62,7 +62,7 @@ void MyGraphic::DrawEmptyField(RenderWindow& window,int offsetX)
 				//rectangle.setFillColor()
 
 				rectangle.setOutlineThickness(3);
-				rectangle.move(xPos+ offsetX, yPos + 5);
+				rectangle.move(xPos + offsetX, yPos + 5);
 				window.draw(rectangle);
 			}
 		}
@@ -70,7 +70,7 @@ void MyGraphic::DrawEmptyField(RenderWindow& window,int offsetX)
 }
 
 
-void MyGraphic::setShipsAndShots(CellArray cellArray, RenderWindow& window,int offsetX)
+void MyGraphic::setShipsAndShots(CellArray cellArray, RenderWindow& window, int offsetX, bool isShipsShow)
 {
 	int xPos = 0, yPos = 0;
 
@@ -85,11 +85,10 @@ void MyGraphic::setShipsAndShots(CellArray cellArray, RenderWindow& window,int o
 	Color shotCellColor = Color(255, 0, 0);
 	Color notShipColor = Color(0, 255, 255);
 
-	for (int i = 0; i < CellArray::CELL_COUNT-1; i++)
+	for (int i = 0; i < CellArray::CELL_COUNT - 1; i++)
 	{
-		for (int j = 0; j < CellArray::CELL_COUNT-1; j++)
+		for (int j = 0; j < CellArray::CELL_COUNT - 1; j++)
 		{
-			
 			if (i > 0 && j > 0)
 			{
 				xPos = j * rectSize;
@@ -114,20 +113,25 @@ void MyGraphic::setShipsAndShots(CellArray cellArray, RenderWindow& window,int o
 				{
 					rectangle.setFillColor(Color::Red);
 				}
-				else
+				else if (cellArray.GetCellByIndex(i, j).getCellType() == "?")
 				{
 					rectangle.setFillColor(Color::White);
 				}
+				else if (isShipsShow)
+				{
+					rectangle.setFillColor(Color::Yellow);
+				}
 
 
-				rectangle.move(xPos+ offsetX, yPos + 5);
+				rectangle.move(xPos + offsetX, yPos + 5);
 				window.draw(rectangle);
 			}
 		}
 	}
 }
 
-void MyGraphic::ShowFieldWindow(bool isWindowActive,int playerOffset,int botOffset, CellArray playerCellArray,CellArray botCellArray)
+void MyGraphic::ShowFieldWindow(bool isWindowActive, int playerOffset, int botOffset, CellArray playerCellArray,
+                                CellArray botCellArray)
 {
 	RenderWindow window(VideoMode(1920, 1080), "Морской бой");
 	//RenderWindow window(VideoMode(1000, 1000), "SFML Works!");
@@ -158,11 +162,11 @@ void MyGraphic::ShowFieldWindow(bool isWindowActive,int playerOffset,int botOffs
 			}
 			window.clear(Color(250, 220, 100));
 
-			DrawEmptyField(window,playerOffset);
-			setShipsAndShots(playerCellArray, window,playerOffset);
+			DrawEmptyField(window, playerOffset);
+			setShipsAndShots(playerCellArray, window, playerOffset, true);
 
 			DrawEmptyField(window, botOffset);
-			setShipsAndShots(botCellArray, window, botOffset);
+			setShipsAndShots(botCellArray, window, botOffset, true);
 
 			// Отрисовка окна	
 			window.display();

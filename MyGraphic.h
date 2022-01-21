@@ -10,7 +10,7 @@ class MyGraphic
 {
 private:
 	void DrawEmptyField(RenderWindow& window, int offsetX);
-	void setShipsAndShots(CellArray cellArray, RenderWindow& window, int offsetX);
+	void setShipsAndShots(CellArray cellArray, RenderWindow& window, int offsetX, bool isShipsShow);
 	
 public:
 

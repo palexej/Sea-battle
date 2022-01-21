@@ -14,48 +14,52 @@
 #include "MyGraphic.h"
 using namespace std;
 vector<Ship> player_vector;
-map<int, int> playerDictionary={
+map<int, int> playerDictionary = {
 	{
-		1,0
+		1, 0
 	},
 	{
-		2,0
+		2, 0
 	},
 	{
-		3,0
+		3, 0
 	},
 	{
-		4,0
+		4, 0
 	},
 };
- bool CheckShipCount(map<int, int> &shipDictionary)
+
+bool CheckShipCount(map<int, int>& shipDictionary)
 {
-	if (shipDictionary[2] > 4 || shipDictionary[3] > 2 || shipDictionary[4]>1)
+	if (shipDictionary[2] > 4 || shipDictionary[3] > 2 || shipDictionary[4] > 1)
 	{
 		return false;
 	}
 
 	return true;
 }
- struct PCout
- {
-	 static std::mutex& Mutex()
-	 {
-		 static std::mutex mut;
-		 return mut;
-	 }
- };
+
+struct PCout
+{
+	static std::mutex& Mutex()
+	{
+		static std::mutex mut;
+		return mut;
+	}
+};
+
 #define thread_cout(msg)\
     PCout::Mutex().lock(), msg, PCout::Mutex().unlock()
-void RandomShipPositions(map<int, int> &shipDictionary, CellArray& cellsArray,vector<Ship> &ships)
+
+void RandomShipPositions(map<int, int>& shipDictionary, CellArray& cellsArray, vector<Ship>& ships)
 {
 	random_device rd;
 	mt19937 mersenne(rd()); // инициализируем Вихрь Мерсенна случайным стартовым числом
-	
+
 
 	int startShipLenght = 2;
 
- 	while( shipDictionary[4]<1)//пока не добавлен корабль длины 4
+	while (shipDictionary[4] < 1) //пока не добавлен корабль длины 4
 	{
 		/*if (playerDictionary[1] == 4)
 		{
@@ -66,15 +70,15 @@ void RandomShipPositions(map<int, int> &shipDictionary, CellArray& cellsArray,ve
 			startShipLenght = 3;
 		}
 
-		if (shipDictionary[3]==2)
+		if (shipDictionary[3] == 2)
 		{
 			startShipLenght = 4;
 		}
-		uniform_int_distribution<int> randomShipLenght(1, 10);//генерация чисел в указанном интервале
+		uniform_int_distribution<int> randomShipLenght(1, 10); //генерация чисел в указанном интервале
 		int randomX = randomShipLenght(rd);
 		int randomY = randomShipLenght(rd);
 
-		uniform_int_distribution<int> randomVerticalOrientation(0, 1);//генерация чисел в указанном интервале
+		uniform_int_distribution<int> randomVerticalOrientation(0, 1); //генерация чисел в указанном интервале
 
 		int randomIntegerVal = randomVerticalOrientation(rd);
 		bool randomVertical;
@@ -89,9 +93,8 @@ void RandomShipPositions(map<int, int> &shipDictionary, CellArray& cellsArray,ve
 
 		int randomLenght = startShipLenght;
 
-		
 
-		Ship ship(randomX, randomY, randomVertical, randomLenght,1);
+		Ship ship(randomX, randomY, randomVertical, randomLenght, 1);
 		//if (cellsArray.GetCellByIndex(randomX, randomY).getCellType()!="#")
 		{
 			if (CheckShipCount(shipDictionary))
@@ -108,168 +111,152 @@ void RandomShipPositions(map<int, int> &shipDictionary, CellArray& cellsArray,ve
 	}
 }
 
- void CheckShipShooting(Cell &selectedCell, CellArray &cellsArray,
-	vector<Ship> &ships)
+bool CheckShipShooting(Cell& selectedCell, CellArray& cellsArray,  vector<Ship>& ships,map<int,int> &dictionary)
 {
-	 string isShip = "#";
-	 string isMiss = "$";
-	 vector<Ship>::iterator it;
-	
-	 bool isFound = false;
-		for (it = ships.begin(); it != ships.end(); ++it)
-		{
-			if (it->getID()==selectedCell.getCellID())
-			{
-				isFound = true;
-				cout << "Попадание" << endl;
-				cellsArray.SetCellByIndex(selectedCell.getXcoord(), selectedCell.getYcoord(), "*");
-				if(it->CheckLostShip(cellsArray))//если корабль убит
-				{
-					cout << "Корабль уничтожен" << endl;
-					/*int int_to_remove = it->getID();
-					if (it != end(ships))
-					{
-						ships.erase(it);
-					}*/
+	string isShip = "#";
+	string isMiss = "$";
+	vector<Ship>::iterator it;
 
-				}
-			
-				//deadShip.CheckLostShip(cellsArray);
-				
+	bool isFound = false;
+	for (it = ships.begin(); it != ships.end(); ++it)
+	{
+		if (it->getID() == selectedCell.getCellID())
+		{
+			isFound = true;
+			cout << "Попадание" << endl;
+			cellsArray.SetCellByIndex(selectedCell.getXcoord(), selectedCell.getYcoord(), "*");
+			if (it->CheckLostShip(cellsArray)) //если корабль убит
+			{
+				cout << "Корабль уничтожен" << endl;
+
+				dictionary[it->getLenght()]-=1;
+
+			}
+
+		}
+	}
+	if (!isFound)
+	{
+		cout << "Промах" << endl;
+		cellsArray.SetCellByIndex(selectedCell.getXcoord(), selectedCell.getYcoord(), "$");
+	}
+	return isFound;
+}
+
+bool MakeRandomAIShot(CellArray& cellsArray, vector<Ship> ships,map<int,int> dictionary)
+{
+	random_device rd;
+	mt19937 mersenne(rd()); // инициализируем Вихрь Мерсенна случайным стартовым числом
+
+
+	int randomX = 0, randomY = 0;
+
+	int maxGenerateValue = Cell::CELL_COUNT - 1;
+	int minGenerateValue = 1;
+	uniform_int_distribution<int> randomShipPosition(1, maxGenerateValue); //генерация чисел в указанном интервале
+
+
+	Cell aiCell;
+
+	//выстрелы рандомные, но не видится корабль
+	bool isBurnShipFound = false;
+	Ship burnShip(0, 0, true, 2, -1);
+	string isBurnShip = "*";
+	string isEmpty = "?";
+	vector<Ship>::iterator burnShipIterator;
+
+
+	//if (!isBurnShipFound) //если раненый корабль не найден, то стреляем туда, куда это можно сделать
+	{
+		bool rightGenerationFlag = true;
+		int randomX = randomShipPosition(rd);
+		int randomY = randomShipPosition(rd);
+		while (rightGenerationFlag)
+		{
+			if (cellsArray.GetCellByIndex(randomX, randomY).getCellType() == "*" || cellsArray.
+				GetCellByIndex(randomX, randomY).getCellType() == "@"
+				|| cellsArray.GetCellByIndex(randomX, randomY).getCellType() == "$" || cellsArray.
+				GetCellByIndex(randomX, randomY).getCellType() == "#")
+			{
+				randomX = randomShipPosition(rd);
+				randomY = randomShipPosition(rd);
+			}
+			else
+			{
+				rightGenerationFlag = false;
 			}
 		}
-	 if (!isFound)
-	 {
-		 cout << "Промах" << endl;
-		 cellsArray.SetCellByIndex(selectedCell.getXcoord(), selectedCell.getYcoord(), "$");
-	 } 
-	
+		Cell shotCell(randomX, randomY, "", -1);
+		string checkThisId = cellsArray.GetCellByIndex(randomX, randomY).getCellType();
+		if (checkThisId != "?" && checkThisId != "@" && checkThisId != "$" && checkThisId != "*")
+		{
+			shotCell.setCellID(stoi(checkThisId));
+		}
 
+		return CheckShipShooting(shotCell, cellsArray, ships, dictionary);
+	}
+
+	//если найден раненый корабль, проверяем соседние с ним ячейки
+	/*if (isBurnShipFound)
+	{
+		for (int i = 0; i < CellArray::CELL_COUNT; i++)
+		{
+			for (int j = 0; j < CellArray::CELL_COUNT; j++)
+			{
+				if (cellsArray.GetCellByIndex(i, j).getCellID()==cellsArray.GetCellByIndex(randomX, randomY).getCellID())
+				{
+					CheckShipShooting(cellsArray.GetCellByIndex(i, j), cellsArray, ships);
+				}
+
+			}
+		}
+	}*/
 }
- void MakeRandomAIShot(CellArray& cellsArray, vector<Ship> ships)
- {
-
-	 random_device rd;
-	 mt19937 mersenne(rd()); // инициализируем Вихрь Мерсенна случайным стартовым числом
 
 
-	 int randomX = 0, randomY = 0;
-
-	 int maxGenerateValue = Cell::CELL_COUNT - 1;
-	 int minGenerateValue = 1;
-	 uniform_int_distribution<int> randomShipPosition(1, maxGenerateValue);//генерация чисел в указанном интервале
-
-
-	
-	 Cell aiCell;
-
-	 //выстрелы рандомные, но не видится корабль
-	 bool isBurnShipFound = false;
-	 Ship burnShip(0,0,true,2,-1);
-	 string isBurnShip = "*";
-	 string isEmpty = "?";
-	 vector<Ship>::iterator burnShipIterator;
-	 /*for (int i = 0; i < CellArray::CELL_COUNT; i++)
-	 {
-		 for (int j = 0; j < CellArray::CELL_COUNT; j++)
-		 {
-			 //если есть корабль, в который мы попали и при этом он не считается убитым, то начинаем стрелять с клетки подбитого корабля
-			 if (cellsArray.GetCellByIndex(i, j).getCellType() == isBurnShip )
-			 {
-
-				 for (burnShipIterator = ships.begin(); burnShipIterator != ships.end(); ++burnShipIterator)
-				 {
-					 if (burnShipIterator->getID() == cellsArray.GetCellByIndex(i, j).getCellID())
-					 {
-						 isBurnShipFound = true;
-						 randomX = i;
-						 randomY = j;
-						 break;
-					 }
-				 }
-			 }
-		 }
-	 }*/
-
-
-	 //if (!isBurnShipFound) //если раненый корабль не найден, то стреляем туда, куда это можно сделать
-	 {
-		 bool rightGenerationFlag = true;
-		 int randomX = randomShipPosition(rd);
-		 int randomY = randomShipPosition(rd);
-		 while (rightGenerationFlag)
-		 {
-			 if ( cellsArray.GetCellByIndex(randomX, randomY).getCellType() == "*"|| cellsArray.GetCellByIndex(randomX, randomY).getCellType()=="@"
-				 || cellsArray.GetCellByIndex(randomX, randomY).getCellType() == "$" || cellsArray.GetCellByIndex(randomX, randomY).getCellType() == "#")
-			 {
-				 randomX = randomShipPosition(rd);
-				 randomY = randomShipPosition(rd);
-			 }
-			 else
-			 {
-				 rightGenerationFlag = false;
-			 }
-		 }
-		 Cell shotCell(randomX, randomY, "", -1);
-		 string checkThisId = cellsArray.GetCellByIndex(randomX, randomY).getCellType();
-		 if (checkThisId != "?"&& checkThisId!="@")
-		 {
-			 shotCell.setCellID(stoi(checkThisId));
-		 }
-
-		 CheckShipShooting(shotCell, cellsArray, ships);
-
-	 }
-
-	 //если найден раненый корабль, проверяем соседние с ним ячейки
-	 /*if (isBurnShipFound)
-	 {
-		 for (int i = 0; i < CellArray::CELL_COUNT; i++)
-		 {
-			 for (int j = 0; j < CellArray::CELL_COUNT; j++)
-			 {
-				 if (cellsArray.GetCellByIndex(i, j).getCellID()==cellsArray.GetCellByIndex(randomX, randomY).getCellID())
-				 {
-					 CheckShipShooting(cellsArray.GetCellByIndex(i, j), cellsArray, ships);
-				 }
-
-			 }
-		 }
-	 }*/
- }
-
- void MakePlayerShot(CellArray& cellsArray, vector<Ship> ships)
+bool MakePlayerShot(CellArray& cellsArray, vector<Ship> ships,map<int,int> &dictionary)
 {
-	 //cout << "Размер вектора " << player_vector.size() << endl;
-	 cellsArray.ShowBattleField();
-	 cout << "х и у для выстрела:" << endl;
-	 int shotX, shotY;
-	 cin >> shotX >> shotY;
-	 //string myType=
-	 Cell shotCell(shotX, shotY, "", -1);
-	 string checkThisId = cellsArray.GetCellByIndex(shotX, shotY).getCellType();
-	 if (checkThisId != "?")
-	 {
-		 shotCell.setCellID(stoi(checkThisId));
-	 }
-
-
-	 CheckShipShooting(shotCell, cellsArray, ships);
-
+	//cellsArray.ShowBattleField();
+	cout << "х и у для выстрела:" << endl;
+	int shotX, shotY;
+	cin >> shotX >> shotY;
+	//string myType=
+	Cell shotCell(shotX, shotY, "", -1);
+	string checkThisId = cellsArray.GetCellByIndex(shotX, shotY).getCellType();
+	if (checkThisId != "?" && checkThisId != "@" && checkThisId != "$" && checkThisId != "*")//todo сделать проверку на то, чтобы нельзя было стрелять в уже выстреленную ячейку, а то крашится
+	{
+		shotCell.setCellID(stoi(checkThisId));
+	}
+	return CheckShipShooting(shotCell, cellsArray, ships, dictionary);
+	
 }
 
-
+bool CheckShipDictionary(map<int,int> &shipDictionary)
+{
+	int equalsCounter = 0;
+	int maxShip = 5;
+	for (int i = 0; i < shipDictionary.size(); i++)
+	{
+		if(shipDictionary[i]==0)
+		{
+			equalsCounter++;
+		}
+	}
+	if (equalsCounter== maxShip)
+	{
+		return false;
+	}
+	return true;
+}
 int main()
 {
 	CellArray playerField, botField;
 
 	Cell cell;
 
-	int x = 0,  y = 0, verticalNumber,lenghtValue;
+	int x = 0, y = 0, verticalNumber, lenghtValue;
 	bool verticalValue;
-	int shipCount=0;
-	
-	RandomShipPositions(playerDictionary, playerField, player_vector);
+	int shipCount = 0;
 
 	map<int, int> botDictionary = playerDictionary;
 	vector<Ship> bot_vector;
@@ -277,86 +264,123 @@ int main()
 	RandomShipPositions(botDictionary, botField, bot_vector);
 	int playerOffset = 0;
 	int botOffset = 750;
-	/*while (shipCount < 1)
+	/*
+	char choise;
+	cout << "Выберите способ расстановки кораблей:\n1. Автоматическая.\n2. Вручную" << endl;
+	cin >> choise;
+	bool isCorrectChoise = true;
+	*/
+
+	RandomShipPositions(playerDictionary, playerField, player_vector);
+	/*
+	 while (isCorrectChoise)
+	 {
+		 switch (choise)
+		 {
+
+		 case '1':
+		 {
+			 RandomShipPositions(playerDictionary, playerField, player_vector);
+			 isCorrectChoise = false;
+			 break;
+		 }
+
+
+		 
+		 case '2':
+		 {
+			 while (shipCount < 5)
+			 {
+
+				 playerField.ShowBattleField();
+
+				 cout << "Введите координату по оси Х и У: " << endl;
+				 cin >> x >> y;
+
+				 cout << "Введите, как разместить корабль(0 - вертикально, любое число - горизонтально)" << endl;
+				 cin >> verticalNumber;
+				 if (verticalNumber == 0)
+				 {
+					 verticalValue = true;
+				 }
+				 else
+				 {
+					 verticalValue = false;
+				 }
+				 cout << "Введите длину корабля от 1 до 4" << endl;
+				 cin >> lenghtValue;
+				 Ship ship(x, y, verticalValue, lenghtValue, 1);
+
+				 if (ship.AddShip(playerField))
+				 {
+					 cout << "Корабль размещен" << endl;
+					 playerDictionary[lenghtValue - 1] += 1;
+					 shipCount++;
+				 }
+				 else
+				 {
+					 cout << "Невозможно размещение в этой позиции" << endl;
+				 }
+				 for (int i = 0; i < playerDictionary.size(); i++)
+				 {  // выводим их
+					 cout << playerDictionary[i] << endl;
+				 }
+
+
+
+
+				
+			 }
+			 break;
+			default:
+			 cout << "Неверное выбран пункт меню, повторите попытку" << endl;
+			 break;
+		 }
+		 }*/
+
+
+
+	
+	//выстрелы компа
+	while (CheckShipDictionary(botDictionary) && CheckShipDictionary(playerDictionary))
 	{
-
-		system("cls");
-		playerField.ShowBattleField();
-
-		cout << "Введите координату по оси Х и У: " << endl;
-		cin >> x >> y;
-
-		cout << "Введите, как разместить корабль(0 - вертикально, любое число - горизонтально)" << endl;
-		cin >> verticalNumber;
-		if (verticalNumber == 0)
-		{
-			verticalValue = true;
-		}
-		else
-		{
-			verticalValue = false;
-		}
-		cout << "Введите длину корабля от 1 до 4" << endl;
-		cin >> lenghtValue;
-		Ship ship(x, y, verticalValue, lenghtValue);
-
-		if (ship.AddShip(playerField))
-		{
-			cout << "Корабль размещен" << endl;
-			playerDictionary[lenghtValue - 1] += 1;
-			shipCount++;
-		}
-		else
-		{
-			cout << "Невозможно размещение в этой позиции" << endl;
-		}
-		for (int i = 0; i< playerDictionary.size();  i++) {  // выводим их
+		cout << "Игрок" << endl;
+		for (int i = 0; i < playerDictionary.size(); i++)
+		{  // выводим их
 			cout << playerDictionary[i] << endl;
 		}
+		cout << "Бот" << endl;
+		for (int i = 0; i < botDictionary.size(); i++)
+		{  // выводим их
+			cout << botDictionary[i] << endl;
+		}
 
-		system("pause");
-		//cout << "Удаление корабля" << endl;
-		//ship.DeleteShip(playerField);
-
-	}*/
-	//ручные выстрелы
-	/*while (player_vector.size() > 0)
-	{
-		
-		
-	}*/
-
-	//выстрелы компа
-	while (player_vector.size() > 0||bot_vector.size()>0)
-	{
-		//system("pause");
-		
 		MyGraphic my_graphic;
-
 	
-		//playerField.ShowBattleField();
-		MakeRandomAIShot(playerField, player_vector);
 
-		
-		MakePlayerShot(botField, bot_vector);
-		//my_graphic.ShowFieldWindow(true, playerField);
-	
-		my_graphic.ShowFieldWindow(true,playerOffset,botOffset,playerField,botField);
 
-	
-		//thread t1(&MyGraphic::ShowFieldWindow,my_graphic,true, playerOffset,playerField);
-		//thread t2(&CellArray::ShowBattleField,playerField);
-		//thread t3(&MakeRandomAIShot, playerField, player_vector);
-		//t1.join();
-		//t2.join();
-		//t3.join();
+		do
+		{
+			my_graphic.ShowFieldWindow(true, playerOffset, botOffset, playerField, botField);
+		}
+		while (MakePlayerShot(botField, bot_vector, botDictionary));
 
-		
-		
 
+		do
+		{
+			my_graphic.ShowFieldWindow(true, playerOffset, botOffset, playerField, botField);
+		} while (MakeRandomAIShot(playerField, player_vector, playerDictionary));
 	}
-	
+	if (!CheckShipDictionary(botDictionary))
+	{
+		cout << "Победа  игрока" << endl;
+	}
+	else
+	{
+		cout << "Победа компьютера" << endl;
+	}
+
 	system("pause");
 	return 0;
-
 }
+
