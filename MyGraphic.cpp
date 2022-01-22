@@ -21,7 +21,7 @@ void MyGraphic::DrawEmptyField(RenderWindow& window, int offsetX)
 
 
 	Font font; //шрифт 
-	font.loadFromFile("..\\fonts\\CyrilicOld.TTF"); //передаем нашему шрифту файл шрифта
+	font.loadFromFile("..\\fonts\\CyrilicOld.TTF"); //загрузка шрифта
 
 	Text text("", font, rectSize);
 	text.setFillColor(Color(0, 0, 0));
@@ -29,6 +29,7 @@ void MyGraphic::DrawEmptyField(RenderWindow& window, int offsetX)
 	int betweenRectOffset = 2;
 	int maxFieldLenght = Cell::CELL_COUNT - 1;
 	Color lightColor = sf::Color(159, 144, 176);
+	//отображение букв, цифр и пустых полей
 	for (int i = 0; i < maxFieldLenght; i++)
 	{
 		for (int j = 0; j < maxFieldLenght; j++)
@@ -59,7 +60,6 @@ void MyGraphic::DrawEmptyField(RenderWindow& window, int offsetX)
 
 				rectangle.setOutlineColor(lightColor);
 
-				//rectangle.setFillColor()
 
 				rectangle.setOutlineThickness(3);
 				rectangle.move(xPos + offsetX, yPos + 5);
@@ -69,7 +69,7 @@ void MyGraphic::DrawEmptyField(RenderWindow& window, int offsetX)
 	}
 }
 
-
+//в зависимости от значения массива ячеек происходит закрашивание соответствующих ячеек
 void MyGraphic::setShipsAndShots(CellArray cellArray, RenderWindow& window, int offsetX, bool isShipsShow)
 {
 	int xPos = 0, yPos = 0;
@@ -133,12 +133,11 @@ void MyGraphic::setShipsAndShots(CellArray cellArray, RenderWindow& window, int 
 void MyGraphic::ShowFieldWindow(bool isWindowActive, int playerOffset, int botOffset, CellArray playerCellArray,
                                 CellArray botCellArray)
 {
-	RenderWindow window(VideoMode(1920, 1080), "Морской бой");
-	//RenderWindow window(VideoMode(1000, 1000), "SFML Works!");
+
+	RenderWindow window(VideoMode(1920, 1080), "Sea battle");
+	
 	if (isWindowActive)
 	{
-		// Объект, который, собственно, является главным окном приложения
-
 
 		// Главный цикл приложения. Выполняется, пока открыто окно
 		while (window.isOpen())
@@ -147,7 +146,6 @@ void MyGraphic::ShowFieldWindow(bool isWindowActive, int playerOffset, int botOf
 			Event event;
 			while (window.pollEvent(event))
 			{
-				// Пользователь нажал на «крестик» и хочет закрыть окно?
 				if (event.type == Event::Closed)
 				{
 					// тогда закрываем его
@@ -156,21 +154,20 @@ void MyGraphic::ShowFieldWindow(bool isWindowActive, int playerOffset, int botOf
 				if (event.type == Event::LostFocus)
 				{
 					window.close(); //каждый раз при сворачивании консоли открывается окно
-					//window.setActive(false);
-					//window.setVisible(false);
 				}
 			}
 			window.clear(Color(250, 220, 100));
 
+
+			//отображение полей и расставленных кораблей
 			DrawEmptyField(window, playerOffset);
 			setShipsAndShots(playerCellArray, window, playerOffset, true);
 
 			DrawEmptyField(window, botOffset);
-			setShipsAndShots(botCellArray, window, botOffset, true);
+			setShipsAndShots(botCellArray, window, botOffset, false);
 
 			// Отрисовка окна	
 			window.display();
-			//window.close();
 		}
 	}
 }
